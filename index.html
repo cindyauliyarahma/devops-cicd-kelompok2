@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Tool Sederhana Pembangkit Kode Hash SHA 256</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-12">
+
+    <header class="bg-blue-600 text-white py-3 px-4 md:px-8 shadow-md">
+        <div class="max-w-4xl mx-auto flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-lg text-xl flex items-center justify-center">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold tracking-wide">Web tool sederhana pembangkit kode hash SHA 256</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 md:p-6 my-6 bg-white rounded-xl border border-gray-100 shadow-sm">
+        
+        <section class="mb-8">
+            <h2 class="text-base font-bold text-gray-800 mb-3">1. Pilih sumber input</h2>
+            <div class="grid grid-cols-2 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+                <button id="btn-tab-teks" class="flex items-center justify-center gap-2 py-3 text-sm font-medium transition bg-blue-50 text-blue-600 border-b-2 border-blue-600 focus:outline-none">
+                    <i class="fa-solid fa-file-lines"></i> Teks
+                </button>
+                <button id="btn-tab-file" class="flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-500 bg-gray-50/50 hover:bg-gray-50 border-b-2 border-transparent transition focus:outline-none">
+                    <i class="fa-solid fa-file-arrow-up"></i> File
+                </button>
+            </div>
+        </section>
+
+        <section class="mb-6">
+            <h2 id="label-input-section" class="text-base font-bold text-gray-800 mb-3">2. Masukkan teks</h2>
+            
+            <div id="container-teks">
+                <textarea id="input-teks" rows="3" placeholder="Klik tombol INPUT di bawah terlebih dahulu untuk mengaktifkan..." class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y text-gray-700 bg-gray-100 cursor-not-allowed transition" disabled></textarea>
+                <div class="text-right text-xs text-gray-400 mt-1"><span id="char-count">0</span> karakter</div>
+            </div>
+
+            <div id="container-file" class="hidden">
+                <div id="dropzone-file" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-100 opacity-60 cursor-not-allowed transition relative">
+                    <input type="file" id="input-file" class="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed" disabled>
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                    <p id="file-name" class="text-sm text-gray-600 font-medium">Klik tombol INPUT di bawah terlebih dahulu untuk mengaktifkan...</p>
+                    <p class="text-xs text-gray-400 mt-1">Ukuran file maksimal disarankan &lt; 50MB</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-4">
+                <button id="btn-generate" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-sm active:scale-95">
+                    INPUT
+                </button>
+                <button id="btn-proses" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-sm active:scale-95">
+                    <i class="fa-solid fa-gears"></i> PROSES
+                </button>
+                <button id="btn-clear" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition shadow-sm active:scale-95">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> KELUAR
+                </button>
+            </div>
+        </section>
+
+        <section class="mb-6">
+            <h2 class="text-base font-bold text-gray-800 mb-3">3. Hasil Hash (SHA 256)</h2>
+            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <div id="output-hash" class="w-full font-mono text-sm text-emerald-800 break-all select-all tracking-wide min-h-[20px]">
+                    -
+                </div>
+                <button id="btn-copy-box" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-emerald-100 rounded-md transition" title="Salin Kode">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+        </section>
+
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
+            <i class="fa-solid fa-circle-info text-blue-500 text-lg mt-0.5"></i>
+            <p class="text-sm text-gray-700 leading-relaxed">
+                <span class="font-semibold text-gray-800">SHA-256 (Secure Hash Algorithm 256-bit)</span> adalah fungsi hash kriptografis yang menghasilkan nilai hash 256-bit (64 karakter heksadesimal).
+            </p>
+        </div>
+
+    </main>
+
+    <script>
+        // DOM Elements
+        const btnTabTeks = document.getElementById('btn-tab-teks');
+        const btnTabFile = document.getElementById('btn-tab-file');
+        const containerTeks = document.getElementById('container-teks');
+        const containerFile = document.getElementById('container-file');
+        const labelInputSection = document.getElementById('label-input-section');
+        const dropzoneFile = document.getElementById('dropzone-file');
+        
+        const inputTeks = document.getElementById('input-teks');
+        const inputFile = document.getElementById('input-file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const charCount = document.getElementById('char-count');
+        
+        const btnGenerate = document.getElementById('btn-generate');
+        const btnProses = document.getElementById('btn-proses'); // Element Baru Proses
+        const btnClear = document.getElementById('btn-clear');    // Berubah Perilaku Menjadi Keluar
+        const btnCopyBox = document.getElementById('btn-copy-box');
+        const outputHash = document.getElementById('output-hash');
+
+        let currentTab = 'teks'; 
+        let fileDataArrayBuffer = null;
+        let isInputActive = false; 
+
+        // Tab Switcher Logic
+        btnTabTeks.addEventListener('click', () => {
+            currentTab = 'teks';
+            btnTabTeks.className = "flex items-center justify-center gap-2 py-3 text-sm font-medium transition bg-blue-50 text-blue-600 border-b-2 border-blue-600 focus:outline-none";
+            btnTabFile.className = "flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-500 bg-gray-50/50 hover:bg-gray-50 border-b-2 border-transparent transition focus:outline-none";
+            containerTeks.classList.remove('hidden');
+            containerFile.classList.add('hidden');
+            labelInputSection.innerText = "2. Masukkan teks";
+        });
+
+        btnTabFile.addEventListener('click', () => {
+            currentTab = 'file';
+            btnTabFile.className = "flex items-center justify-center gap-2 py-3 text-sm font-medium transition bg-blue-50 text-blue-600 border-b-2 border-blue-600 focus:outline-none";
+            btnTabTeks.className = "flex items-center justify-center gap-2 py-3 text-sm font-medium text-gray-500 bg-gray-50/50 hover:bg-gray-50 border-b-2 border-transparent transition focus:outline-none";
+            containerFile.classList.remove('hidden');
+            containerTeks.classList.add('hidden');
+            labelInputSection.innerText = "2. Unggah file";
+        });
+
+        // Hitung Karakter Teks
+        inputTeks.addEventListener('input', () => {
+            charCount.innerText = inputTeks.value.length;
+        });
+
+        // Handle File Upload Change
+        inputFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameDisplay.innerText = `File terpilih: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    fileDataArrayBuffer = event.target.result;
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // LOGIKA TOMBOL INPUT: Membuka Kunci & Mengaktifkan Kursor (Focus)
+        btnGenerate.addEventListener('click', () => {
+            isInputActive = true;
+
+            // Aktifkan area teks
+            inputTeks.removeAttribute('disabled');
+            inputTeks.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            inputTeks.placeholder = "Masukkan teks yang ingin di-hash di sini...";
+
+            // Aktifkan area file
+            inputFile.removeAttribute('disabled');
+            inputFile.classList.remove('cursor-not-allowed');
+            dropzoneFile.classList.remove('bg-gray-100', 'opacity-60', 'cursor-not-allowed');
+            dropzoneFile.classList.add('bg-gray-50', 'hover:bg-gray-100/70');
+            fileNameDisplay.innerText = "Klik atau seret file ke sini untuk mengunggah";
+
+            // Arahkan kursor fokus secara otomatis ke kotak teks/file yang aktif
+            if (currentTab === 'teks') {
+                inputTeks.focus();
+            }
+        });
+
+        // LOGIKA TOMBOL PROSES: Menghitung fungsi SHA-256 saat diklik
+        btnProses.addEventListener('click', () => {
+            if (!isInputActive) {
+                alert("Silakan klik tombol INPUT terlebih dahulu untuk mengaktifkan form!");
+                return;
+            }
+            generateHash();
+        });
+
+        // Fungsi Inti Pemrosesan Kode Hash SHA-256
+        function generateHash() {
+            if (currentTab === 'teks') {
+                const textValue = inputTeks.value;
+                if (textValue === "") {
+                    outputHash.innerText = "-";
+                    alert("Kolom teks masih kosong!");
+                } else {
+                    const hash = CryptoJS.SHA256(textValue).toString(CryptoJS.enc.Hex);
+                    outputHash.innerText = hash;
+                }
+            } else if (currentTab === 'file') {
+                if (fileDataArrayBuffer) {
+                    const wordArray = CryptoJS.lib.WordArray.create(fileDataArrayBuffer);
+                    const hash = CryptoJS.SHA256(wordArray).toString(CryptoJS.enc.Hex);
+                    outputHash.innerText = hash;
+                } else {
+                    alert("Silakan pilih file terlebih dahulu!");
+                }
+            }
+        }
+
+        // LOGIKA TOMBOL KELUAR: Reset Halaman & Mengunci Kembali Form Keadaan Awal
+        btnClear.addEventListener('click', () => {
+            isInputActive = false;
+            
+            // Bersihkan data teks & file
+            inputTeks.value = "";
+            inputFile.value = "";
+            fileDataArrayBuffer = null;
+            charCount.innerText = "0";
+            outputHash.innerText = "-";
+
+            // Kunci kembali textarea teks
+            inputTeks.setAttribute('disabled', 'true');
+            inputTeks.classList.add('bg-gray-100', 'cursor-not-allowed');
+            inputTeks.placeholder = "Klik tombol INPUT di bawah terlebih dahulu untuk mengaktifkan...";
+
+            // Kunci kembali inputan file
+            inputFile.setAttribute('disabled', 'true');
+            inputFile.classList.add('cursor-not-allowed');
+            dropzoneFile.classList.add('bg-gray-100', 'opacity-60', 'cursor-not-allowed');
+            dropzoneFile.classList.remove('bg-gray-50', 'hover:bg-gray-100/70');
+            fileNameDisplay.innerText = "Klik tombol INPUT di bawah terlebih dahulu untuk mengaktifkan...";
+            
+            alert("Sesi aman ditutup. Form berhasil dikunci kembali.");
+        });
+
+        // Fungsi Copy Clipboard
+        function copyToClipboard() {
+            const textToCopy = outputHash.innerText;
+            if (textToCopy === "-") {
+                alert("Belum ada kode hash yang dibuat!");
+                return;
+            }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("Kode Hash berhasil disalin ke clipboard!");
+            }).catch(err => {
+                console.error("Gagal menyalin teks: ", err);
+            });
+        }
+
+        btnCopyBox.addEventListener('click', copyToClipboard);
+    </script>
+</body>
+</html>
